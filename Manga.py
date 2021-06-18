@@ -16,14 +16,20 @@ def merge_pdf_pages(path, chapter_name):
 
 
 def save_page_as_pdf(image_url, folder_path, page_number):
-    image_data = requests.get(image_url).content
-    image_path = os.path.join(folder_path, 'Page_' + str(page_number) + '.jpg')
-    with open(image_path, 'wb') as handler:
-        handler.write(image_data)
-    image_png = Image.open(image_path)
-    image_saver = image_png.convert('RGB')
-    image_saver.save(os.path.join(folder_path, 'Page_' + str(page_number).zfill(3)+'.pdf'))
-    os.remove(image_path)
+    succed = False
+    while not succed:
+        try:
+            image_data = requests.get(image_url).content
+            image_path = os.path.join(folder_path, 'Page_' + str(page_number) + '.jpg')
+            with open(image_path, 'wb') as handler:
+                handler.write(image_data)
+            image_png = Image.open(image_path)
+            image_saver = image_png.convert('RGB')
+            image_saver.save(os.path.join(folder_path, 'Page_' + str(page_number).zfill(3)+'.pdf'))
+            os.remove(image_path)
+            succed = True
+        except:
+            succed = False
 
 
 def split_input_line(line):
@@ -99,14 +105,22 @@ for line in input_lines:
     find_first(lower, driver, url)
     
     while (lower - (upper + 1)):
-        next_page_button = driver.find_element_by_xpath('//*[@id="reader-wrapper"]/div[9]/div[2]/div/div[3]')
-        total_pages = int(driver.find_element_by_xpath('//*[@id="reader-wrapper"]/div[9]/div[2]/div/div[2]/span/em[2]').text)
+        succed = False
+        while not succed:
+            try:
+                next_page_button = driver.find_element_by_xpath('//*[@id="reader-wrapper"]/div[9]/div[2]/div/div[3]')
+                total_pages = int(driver.find_element_by_xpath('//*[@id="reader-wrapper"]/div[9]/div[2]/div/div[2]/span/em[2]').text)
+                succed = True
+            except:
+                driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
         for i in range(1,total_pages+1):
             image_url = driver.find_element_by_xpath('//*[@id="reader-wrapper"]/div[4]/div[2]/div/img').get_attribute('src')
             save_page_as_pdf(image_url, folder_path, i)
             next_page_button.click()
+            time.sleep(20)
         merge_pdf_pages(folder_path, "Capítulo_" + driver.find_element_by_xpath("//*[@id=\"reader-wrapper\"]/div[2]/div[3]/div[2]/span[1]").find_element_by_tag_name('em').text)
         lower += 1
         if not check_last_chapter(driver):
             break
         driver.find_element_by_xpath('//*[@id=\"reader-wrapper\"]/div[2]/div[3]/div[3]').click()
+        time.sleep(60)
