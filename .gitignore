@@ -7,5 +7,5 @@ __pycache__/
 */.ipynb_checkpoints/
 
 # Output files
-*/Files/
+*/Files/*
 *Files
